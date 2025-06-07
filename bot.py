@@ -4,7 +4,7 @@ from telebot import types
 import os
 
 # ربات با توکن از متغیر محیطی
-bot = telebot.TeleBot(os.environ["BOT_TOKEN"], parse_mode=None)
+bot = telebot.TeleBot("7698496255:AAF5DyKAh4ffaueJw4E9_cbiYwPNU6Jl1JE", parse_mode=None)
 
 # آی‌دی عددی مدیر (شما)
 admin_id = 328903570
