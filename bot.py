@@ -11,12 +11,8 @@ admin_id = 328903570
 
 # قیمت‌های مواد اولیه
 raw_material_prices = """
-📦 قیمت مواد اولیه امروز:
-
-- پلی‌اتیلن سبک: ۱۸۵,۰۰۰ تومان
-- پلی‌پروپیلن: ۱۹۵,۰۰۰ تومان
-- پی‌وی‌سی: ۱۵۵,۰۰۰ تومان
-- پلی‌استایرن: ۲۱۰,۰۰۰ تومان
+جهت اطلاع از مواد اولیه وارد کانال تلگرام شوید
+@khadamatsanatplastik
 """
 
 # تابع تبدیل عدد به فارسی
@@ -68,13 +64,13 @@ def handle_all(message):
         bot.send_message(message.chat.id, raw_material_prices)
 
     elif message.text == "شماره تماس":
-        bot.send_message(message.chat.id, "☎️ شماره تماس: 09123456789")
+        bot.send_message(message.chat.id, "☎️ شماره تماس: 09121938795")
 
     elif message.text == "اینستاگرام":
-        bot.send_message(message.chat.id, "📸 اینستاگرام:\nhttps://instagram.com/your_page")
+        bot.send_message(message.chat.id, "📸 اینستاگرام:\nhttps://instagram.com/nikangranol")
 
     elif message.text == "آدرس سایت":
-        bot.send_message(message.chat.id, "🌐 سایت:\nhttps://yourwebsite.com")
+        bot.send_message(message.chat.id, "🌐 سایت:\nhttps://nikangranol.ir")
 
     elif message.text == "خرید گرانول":
         bot.send_message(message.chat.id, "✅ درخواست شما ثبت شد. به زودی با شما تماس خواهیم گرفت.")
