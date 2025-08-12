@@ -4,14 +4,14 @@ from telebot import types
 import os
 
 # ربات با توکن از متغیر محیطی
-bot = telebot.TeleBot("7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80", parse_mode=None)
+bot = telebot.TeleBot(os.environ["7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80"], parse_mode=None)
 
 # آی‌دی عددی مدیر (شما)
 admin_id = 328903570
 
 # قیمت‌های مواد اولیه
 raw_material_prices = """
-جهت اطلاع از مواد اولیه وارد کانال تلگرام شوید
+📦 برای اطلاع از قیمت وارد کانال تلگرام شوید. 
 @khadamatsanatplastik
 """
 
@@ -46,6 +46,26 @@ def show_main_menu(message):
     )
     bot.send_message(message.chat.id, "✅ منو اصلی:", reply_markup=markup)
 
+# گرفتن شماره تماس هنگام انتخاب "خرید گرانول"
+@bot.message_handler(func=lambda message: message.text == "خرید گرانول")
+def request_contact(message):
+    markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    contact_button = types.KeyboardButton("ارسال شماره تماس", request_contact=True)
+    markup.add(contact_button)
+    bot.send_message(message.chat.id, "لطفا شماره تماس خود را برای ثبت سفارش ارسال کنید:", reply_markup=markup)
+
+# دریافت شماره تماس کاربر و ارسال به ادمین
+@bot.message_handler(content_types=['contact'])
+def handle_contact(message):
+    if message.contact is not None:
+        phone_number = message.contact.phone_number
+        user_name = message.from_user.first_name
+        username = message.from_user.username or "ندارد"
+        user_id = message.from_user.id
+
+        bot.send_message(message.chat.id, "✅ شماره تماس شما دریافت شد. به زودی با شما تماس خواهیم گرفت.")
+        bot.send_message(admin_id, f"🛒 سفارش خرید گرانول:\n👤 نام: {user_name}\n📱 آی‌دی: @{username}\n🆔 عددی: {user_id}\n📞 شماره تماس: {phone_number}")
+
 # پردازش پیام‌ها
 @bot.message_handler(func=lambda message: True)
 def handle_all(message):
@@ -71,10 +91,6 @@ def handle_all(message):
 
     elif message.text == "آدرس سایت":
         bot.send_message(message.chat.id, "🌐 سایت:\nhttps://nikangranol.ir")
-
-    elif message.text == "خرید گرانول":
-        bot.send_message(message.chat.id, "✅ درخواست شما ثبت شد. به زودی با شما تماس خواهیم گرفت.")
-        bot.send_message(admin_id, f"🛒 سفارش خرید گرانول:\n👤 نام: {message.from_user.first_name}\n📱 آی‌دی: @{message.from_user.username or 'ندارد'}\n🆔 عددی: {message.from_user.id}")
 
     else:
         bot.reply_to(message, "❗️ لطفا یکی از گزینه‌ها را انتخاب کن.")
