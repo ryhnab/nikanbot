@@ -97,3 +97,4 @@ def handle_all(message):
 
 # اجرای ربات
 bot.infinity_polling()
+
