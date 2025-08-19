@@ -9,7 +9,7 @@ from datetime import datetime
 BOT_TOKEN = os.environ.get("7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80")  # توکن از متغیر محیطی Railway
 ADMIN_ID = 328903570                    # آی‌دی عددی مدیر
 
-bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
+bot = telebot.TeleBot(7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80, parse_mode=None)
 
 # پیام پیش‌فرض قیمت‌ها
 today_prices = "قیمت‌های امروز هنوز ثبت نشده."
