@@ -1,19 +1,18 @@
+# filename: price_bot.py
 import telebot
 import requests
 from telebot import types
 import os
+from datetime import datetime
 
-# ربات با توکن از متغیر محیطی
-bot = telebot.TeleBot(os.environ["7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80"], parse_mode=None)
+# ---------------- تنظیمات ----------------
+BOT_TOKEN = os.environ.get("7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80")  # توکن از متغیر محیطی Railway
+ADMIN_ID = 328903570                    # آی‌دی عددی مدیر
 
-# آی‌دی عددی مدیر (شما)
-admin_id = 328903570
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
 
-# قیمت‌های مواد اولیه
-raw_material_prices = """
-📦 برای اطلاع از قیمت وارد کانال تلگرام شوید. 
-@khadamatsanatplastik
-"""
+# پیام پیش‌فرض قیمت‌ها
+today_prices = "قیمت‌های امروز هنوز ثبت نشده."
 
 # تابع تبدیل عدد به فارسی
 def to_persian_number(number):
@@ -22,7 +21,9 @@ def to_persian_number(number):
     persian_number = "".join(persian_digits[int(d)] if d.isdigit() else "،" for d in number_str)
     return persian_number
 
-# دکمه شروع اولیه
+# ---------------- دستورات ربات ----------------
+
+# شروع
 @bot.message_handler(commands=['start'])
 def send_start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -30,31 +31,40 @@ def send_start(message):
     markup.add(start_button)
     bot.send_message(message.chat.id, "👋 به ربات نیکان گرانول خوش آمدی!\n\nبرای شروع دکمه زیر رو بزن:", reply_markup=markup)
 
-# نمایش منوی اصلی پس از زدن "شروع"
+# نمایش منوی اصلی
 @bot.message_handler(func=lambda message: message.text == "شروع")
 def show_main_menu(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(
-        types.KeyboardButton("دلار"), types.KeyboardButton("طلا"),
-        types.KeyboardButton("قیمت مواد اولیه")
-    )
+    markup.add(types.KeyboardButton("دلار"), types.KeyboardButton("طلا"), types.KeyboardButton("قیمت مواد اولیه"))
     markup.add(types.KeyboardButton("خرید گرانول"))
-    markup.add(
-        types.KeyboardButton("شماره تماس"),
-        types.KeyboardButton("اینستاگرام"),
-        types.KeyboardButton("آدرس سایت")
-    )
+    markup.add(types.KeyboardButton("شماره تماس"), types.KeyboardButton("اینستاگرام"), types.KeyboardButton("آدرس سایت"))
     bot.send_message(message.chat.id, "✅ منو اصلی:", reply_markup=markup)
 
-# گرفتن شماره تماس هنگام انتخاب "خرید گرانول"
+# دستور ادمین برای آپدیت قیمت‌ها
+@bot.message_handler(commands=['set_prices'])
+def set_prices(message):
+    global today_prices
+    if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, "⛔️ شما دسترسی ندارید.")
+        return
+    
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        bot.reply_to(message, "❌ لطفاً متن قیمت‌ها را بعد از دستور بنویسید.")
+        return
+    
+    today_prices = f"📅 قیمت‌های {datetime.now().strftime('%Y-%m-%d')}:\n{args[1]}"
+    bot.reply_to(message, "✅ قیمت‌ها آپدیت شد.")
+
+# گرفتن شماره تماس
 @bot.message_handler(func=lambda message: message.text == "خرید گرانول")
 def request_contact(message):
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    contact_button = types.KeyboardButton("ارسال شماره تماس", request_contact=True)
+    contact_button = types.KeyboardButton("📲 ارسال شماره تماس", request_contact=True)
     markup.add(contact_button)
     bot.send_message(message.chat.id, "لطفا شماره تماس خود را برای ثبت سفارش ارسال کنید:", reply_markup=markup)
 
-# دریافت شماره تماس کاربر و ارسال به ادمین
+# دریافت شماره تماس و ارسال به ادمین
 @bot.message_handler(content_types=['contact'])
 def handle_contact(message):
     if message.contact is not None:
@@ -64,7 +74,7 @@ def handle_contact(message):
         user_id = message.from_user.id
 
         bot.send_message(message.chat.id, "✅ شماره تماس شما دریافت شد. به زودی با شما تماس خواهیم گرفت.")
-        bot.send_message(admin_id, f"🛒 سفارش خرید گرانول:\n👤 نام: {user_name}\n📱 آی‌دی: @{username}\n🆔 عددی: {user_id}\n📞 شماره تماس: {phone_number}")
+        bot.send_message(ADMIN_ID, f"🛒 سفارش خرید گرانول:\n👤 نام: {user_name}\n📱 آی‌دی: @{username}\n🆔 عددی: {user_id}\n📞 شماره تماس: {phone_number}")
 
 # پردازش پیام‌ها
 @bot.message_handler(func=lambda message: True)
@@ -81,7 +91,7 @@ def handle_all(message):
             bot.reply_to(message, "❌ خطا در دریافت قیمت")
 
     elif message.text == "قیمت مواد اولیه":
-        bot.send_message(message.chat.id, raw_material_prices)
+        bot.send_message(message.chat.id, today_prices)
 
     elif message.text == "شماره تماس":
         bot.send_message(message.chat.id, "☎️ شماره تماس: 09121938795")
@@ -95,6 +105,5 @@ def handle_all(message):
     else:
         bot.reply_to(message, "❗️ لطفا یکی از گزینه‌ها را انتخاب کن.")
 
-# اجرای ربات
+# ---------------- اجرای ربات ----------------
 bot.infinity_polling()
-
