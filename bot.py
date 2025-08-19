@@ -1,58 +1,99 @@
-# filename: price_bot.py
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
-from datetime import datetime
+import telebot
+import requests
+from telebot import types
+import os
 
-# ====== تنظیمات اولیه ======
-BOT_TOKEN = "7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80"  # توکن رباتت
-ADMIN_ID = 328903570          # آی‌دی ادمین
+# ربات با توکن از متغیر محیطی
+bot = telebot.TeleBot(os.environ["7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80"], parse_mode=None)
 
-# پیام پیش‌فرض قیمت‌ها
-today_prices = "قیمت‌های امروز هنوز ثبت نشده."
+# آی‌دی عددی مدیر (شما)
+admin_id = 328903570
 
-# ====== دستورات ربات ======
+# قیمت‌های مواد اولیه
+raw_material_prices = """
+📦 برای اطلاع از قیمت وارد کانال تلگرام شوید. 
+@khadamatsanatplastik
+"""
 
-# دستور /start و نمایش دکمه
-def start(update: Update, context: CallbackContext):
-    keyboard = [[InlineKeyboardButton("لیست قیمت امروز", callback_data='show_prices')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("سلام! یکی از گزینه‌ها را انتخاب کنید:", reply_markup=reply_markup)
+# تابع تبدیل عدد به فارسی
+def to_persian_number(number):
+    persian_digits = "۰۱۲۳۴۵۶۷۸۹"
+    number_str = f"{number:,}"
+    persian_number = "".join(persian_digits[int(d)] if d.isdigit() else "،" for d in number_str)
+    return persian_number
 
-# دستور ادمین برای آپدیت قیمت‌ها
-def set_prices(update: Update, context: CallbackContext):
-    global today_prices
-    user_id = update.effective_user.id
-    if user_id != ADMIN_ID:
-        update.message.reply_text("شما دسترسی ندارید!")
-        return
+# دکمه شروع اولیه
+@bot.message_handler(commands=['start'])
+def send_start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    start_button = types.KeyboardButton("شروع")
+    markup.add(start_button)
+    bot.send_message(message.chat.id, "👋 به ربات نیکان گرانول خوش آمدی!\n\nبرای شروع دکمه زیر رو بزن:", reply_markup=markup)
 
-    if not context.args:
-        update.message.reply_text("لطفاً متن قیمت‌ها را بعد از دستور وارد کنید.")
-        return
+# نمایش منوی اصلی پس از زدن "شروع"
+@bot.message_handler(func=lambda message: message.text == "شروع")
+def show_main_menu(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(
+        types.KeyboardButton("دلار"), types.KeyboardButton("طلا"),
+        types.KeyboardButton("قیمت مواد اولیه")
+    )
+    markup.add(types.KeyboardButton("خرید گرانول"))
+    markup.add(
+        types.KeyboardButton("شماره تماس"),
+        types.KeyboardButton("اینستاگرام"),
+        types.KeyboardButton("آدرس سایت")
+    )
+    bot.send_message(message.chat.id, "✅ منو اصلی:", reply_markup=markup)
 
-    # ثبت پیام جدید با تاریخ روز
-    today_prices = f"📅 قیمت‌های {datetime.now().strftime('%Y-%m-%d')}:\n" + " ".join(context.args)
-    update.message.reply_text("✅ قیمت‌ها آپدیت شد.")
+# گرفتن شماره تماس هنگام انتخاب "خرید گرانول"
+@bot.message_handler(func=lambda message: message.text == "خرید گرانول")
+def request_contact(message):
+    markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    contact_button = types.KeyboardButton("ارسال شماره تماس", request_contact=True)
+    markup.add(contact_button)
+    bot.send_message(message.chat.id, "لطفا شماره تماس خود را برای ثبت سفارش ارسال کنید:", reply_markup=markup)
 
-# پاسخ به دکمه
-def button(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    if query.data == 'show_prices':
-        query.edit_message_text(text=today_prices)
+# دریافت شماره تماس کاربر و ارسال به ادمین
+@bot.message_handler(content_types=['contact'])
+def handle_contact(message):
+    if message.contact is not None:
+        phone_number = message.contact.phone_number
+        user_name = message.from_user.first_name
+        username = message.from_user.username or "ندارد"
+        user_id = message.from_user.id
 
-# ====== اجرای ربات ======
-def main():
-    updater = Updater(BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
+        bot.send_message(message.chat.id, "✅ شماره تماس شما دریافت شد. به زودی با شما تماس خواهیم گرفت.")
+        bot.send_message(admin_id, f"🛒 سفارش خرید گرانول:\n👤 نام: {user_name}\n📱 آی‌دی: @{username}\n🆔 عددی: {user_id}\n📞 شماره تماس: {phone_number}")
 
-    dp.add_handler(CommandHandler('start', start))
-    dp.add_handler(CommandHandler('set_prices', set_prices))
-    dp.add_handler(CallbackQueryHandler(button))
+# پردازش پیام‌ها
+@bot.message_handler(func=lambda message: True)
+def handle_all(message):
+    if message.text == "دلار" or message.text == "طلا":
+        try:
+            response = requests.get('https://api.navasan.tech/latest/?api_key=freegSdtaKeXX2f90DTCiKFD8OCUwFom')
+            data = response.json()
+            if message.text == "دلار":
+                bot.reply_to(message, to_persian_number(int(data["usd_sell"]["value"])) + " تومان")
+            elif message.text == "طلا":
+                bot.reply_to(message, to_persian_number(int(data["18ayar"]["value"])) + " تومان")
+        except:
+            bot.reply_to(message, "❌ خطا در دریافت قیمت")
 
-    print("Bot is running...")
-    updater.start_polling()
-    updater.idle()
+    elif message.text == "قیمت مواد اولیه":
+        bot.send_message(message.chat.id, raw_material_prices)
 
-if __name__ == '__main__':
-    main()
+    elif message.text == "شماره تماس":
+        bot.send_message(message.chat.id, "☎️ شماره تماس: 09121938795")
+
+    elif message.text == "اینستاگرام":
+        bot.send_message(message.chat.id, "📸 اینستاگرام:\nhttps://instagram.com/nikangranol")
+
+    elif message.text == "آدرس سایت":
+        bot.send_message(message.chat.id, "🌐 سایت:\nhttps://nikangranol.ir")
+
+    else:
+        bot.reply_to(message, "❗️ لطفا یکی از گزینه‌ها را انتخاب کن.")
+
+# اجرای ربات
+bot.infinity_polling()
