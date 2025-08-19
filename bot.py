@@ -7,7 +7,9 @@ from datetime import datetime
 
 # ---------------- تنظیمات ----------------
 
-bot = telebot.TeleBot("7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80", parse_mode=None)
+BOT_TOKEN = "7698496255:AAHfJ2_-fp_7GmZhtEZLl41s2dsmjjIMw80"
+ADMIN_ID = 328903570   # آی‌دی عددی ادمین
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
 
 # پیام پیش‌فرض قیمت‌ها
 today_prices = "قیمت‌های امروز هنوز ثبت نشده."
@@ -27,16 +29,23 @@ def send_start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     start_button = types.KeyboardButton("شروع")
     markup.add(start_button)
-    bot.send_message(message.chat.id, "👋 به ربات نیکان گرانول خوش آمدی!\n\nبرای شروع دکمه زیر رو بزن:", reply_markup=markup)
+    bot.send_message(
+        message.chat.id,
+        "👋 به ربات نیکان گرانول خوش آمدی!\n\nبرای شروع دکمه زیر رو بزن:",
+        reply_markup=markup
+    )
 
 # نمایش منوی اصلی
-@bot.message_handler(func=lambda message: message.text == "شروع")
-def show_main_menu(message):
+def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(types.KeyboardButton("دلار"), types.KeyboardButton("طلا"), types.KeyboardButton("قیمت مواد اولیه"))
     markup.add(types.KeyboardButton("خرید گرانول"))
     markup.add(types.KeyboardButton("شماره تماس"), types.KeyboardButton("اینستاگرام"), types.KeyboardButton("آدرس سایت"))
-    bot.send_message(message.chat.id, "✅ منو اصلی:", reply_markup=markup)
+    return markup
+
+@bot.message_handler(func=lambda message: message.text == "شروع")
+def show_main_menu(message):
+    bot.send_message(message.chat.id, "✅ منو اصلی:", reply_markup=main_menu())
 
 # دستور ادمین برای آپدیت قیمت‌ها
 @bot.message_handler(commands=['set_prices'])
@@ -72,7 +81,13 @@ def handle_contact(message):
         user_id = message.from_user.id
 
         bot.send_message(message.chat.id, "✅ شماره تماس شما دریافت شد. به زودی با شما تماس خواهیم گرفت.")
-        bot.send_message(ADMIN_ID, f"🛒 سفارش خرید گرانول:\n👤 نام: {user_name}\n📱 آی‌دی: @{username}\n🆔 عددی: {user_id}\n📞 شماره تماس: {phone_number}")
+        bot.send_message(
+            ADMIN_ID,
+            f"🛒 سفارش خرید گرانول:\n👤 نام: {user_name}\n📱 آی‌دی: @{username}\n🆔 عددی: {user_id}\n📞 شماره تماس: {phone_number}"
+        )
+
+        # بازگشت به منوی اصلی
+        bot.send_message(message.chat.id, "🔙 به منوی اصلی برگشتی:", reply_markup=main_menu())
 
 # پردازش پیام‌ها
 @bot.message_handler(func=lambda message: True)
