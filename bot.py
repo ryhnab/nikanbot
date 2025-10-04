@@ -10,6 +10,7 @@ from datetime import datetime
 BOT_TOKEN = "7698496255:AAEI4VENai0PfYxjAiuRmaeY12BGht6xK8M"
 ADMIN_ID = 328903570   # آی‌دی عددی ادمین
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
+BRS_API_KEY = "BcH855thH79pQIf5LLkNiTVwEidFnE8J"
 
 # پیام پیش‌فرض قیمت‌ها
 today_prices = "قیمت‌های امروز هنوز ثبت نشده."
@@ -118,5 +119,13 @@ def handle_all(message):
     else:
         bot.reply_to(message, "❗️ لطفا یکی از گزینه‌ها را انتخاب کن.")
 
+url = "https://brsapi.ir/api/your-endpoint"  # جایگزین با endpoint موردنظر
+params = {"api_key": BRS_API_KEY}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+# ۲. آماده کردن پیام
+message_text = f"اطلاعات: {data}"
 # ---------------- اجرای ربات ----------------
 bot.infinity_polling()
