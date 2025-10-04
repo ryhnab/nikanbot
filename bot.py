@@ -7,7 +7,7 @@ from datetime import datetime
 
 # ---------------- تنظیمات ----------------
 
-BOT_TOKEN = "7698496255:AAFazWucscfxSCR7qSX_wkd1aiQpP_OoaOg"
+BOT_TOKEN = "7698496255:AAEI4VENai0PfYxjAiuRmaeY12BGht6xK8M"
 ADMIN_ID = 328903570   # آی‌دی عددی ادمین
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
 
