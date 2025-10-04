@@ -94,7 +94,7 @@ def handle_contact(message):
 def handle_all(message):
     if message.text == "دلار" or message.text == "طلا":
         try:
-            response = requests.get('https://api.navasan.tech/latest/?api_key=freem9Hu4MwxVPpFunF7vJAmE7vDDxVv')
+            response = requests.get('https://brsapi.ir/latest/?api_key=BcH855thH79pQIf5LLkNiTVwEidFnE8J')
             data = response.json()
             if message.text == "دلار":
                 bot.reply_to(message, to_persian_number(int(data["usd_sell"]["value"])) + " تومان")
